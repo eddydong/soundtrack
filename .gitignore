@@ -1,0 +1,9 @@
+.build/
+dist/
+captures/
+*.wav
+*.caf
+*.m4a
+*.mp3
+*.mov
+.DS_Store
