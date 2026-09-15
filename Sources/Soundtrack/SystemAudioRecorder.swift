@@ -5,8 +5,12 @@ import Foundation
 import ScreenCaptureKit
 
 enum CaptureLog {
-    static let url = FileManager.default.homeDirectoryForCurrentUser
-        .appendingPathComponent("Desktop/soundtrack/captures/soundtrack.log")
+    static let url: URL = {
+        let support = FileManager.default.homeDirectoryForCurrentUser
+            .appendingPathComponent("Library/Application Support/Soundtrack", isDirectory: true)
+        try? FileManager.default.createDirectory(at: support, withIntermediateDirectories: true)
+        return support.appendingPathComponent("soundtrack.log")
+    }()
 
     static func write(_ message: String) {
         let line = "\(ISO8601DateFormatter().string(from: Date())) \(message)\n"
@@ -60,7 +64,7 @@ final class SystemAudioRecorder: ObservableObject {
     @Published private(set) var level: Float = 0
     @Published private(set) var lastFile: URL?
     @Published private(set) var status: String =
-        "Captures what your Mac plays. The microphone stays off."
+        "Captures what your Mac plays. MP3s save to the Desktop. The microphone stays off."
 
     var isRecording: Bool {
         if case .recording = phase { return true }
@@ -82,8 +86,8 @@ final class SystemAudioRecorder: ObservableObject {
     private let capturesDirectory: URL
 
     init() {
-        capturesDirectory = FileManager.default.homeDirectoryForCurrentUser
-            .appendingPathComponent("Desktop/soundtrack/captures", isDirectory: true)
+        capturesDirectory = FileManager.default.urls(for: .desktopDirectory, in: .userDomainMask).first
+            ?? FileManager.default.homeDirectoryForCurrentUser.appendingPathComponent("Desktop", isDirectory: true)
         engine.onAudio = { [io] buffer in
             io.append(buffer)
         }
@@ -164,13 +168,13 @@ final class SystemAudioRecorder: ObservableObject {
         do {
             try FileManager.default.createDirectory(at: capturesDirectory, withIntermediateDirectories: true)
             let stamp = Self.filenameDate.string(from: Date())
-            let wav = capturesDirectory.appendingPathComponent("system-\(stamp).wav")
+            let wav = capturesDirectory.appendingPathComponent("soundtrack-\(stamp).wav")
             wavURL = wav
             io.reset(url: wav)
             try await engine.start(source: source)
             startedAt = Date()
             phase = .recording
-            status = "Play the website. Stop when the music ends."
+            status = "Play the website. Stop when the music ends. MP3s land on your Desktop."
             CaptureLog.write("capture started \(wav.lastPathComponent)")
             startTick()
         } catch {

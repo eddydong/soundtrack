@@ -1,3 +1,4 @@
+import AppKit
 import SwiftUI
 
 struct ContentView: View {
@@ -17,17 +18,21 @@ struct ContentView: View {
     }
 
     private var header: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text("Soundtrack")
-                .font(.system(.largeTitle, design: .serif, weight: .medium))
-                .foregroundStyle(Palette.ink)
-            Text("System playback → MP3")
-                .font(.system(.subheadline, design: .rounded, weight: .medium))
-                .foregroundStyle(Palette.muted)
-            HStack(spacing: 8) {
-                Badge(text: "System route", symbol: "speaker.wave.2.fill")
-                Badge(text: "Mic off", symbol: "mic.slash.fill")
+        HStack(alignment: .center, spacing: 14) {
+            AppLogo()
+            VStack(alignment: .leading, spacing: 8) {
+                Text("Soundtrack")
+                    .font(.system(.largeTitle, design: .serif, weight: .medium))
+                    .foregroundStyle(Palette.ink)
+                Text("System playback → MP3")
+                    .font(.system(.subheadline, design: .rounded, weight: .medium))
+                    .foregroundStyle(Palette.muted)
+                HStack(spacing: 8) {
+                    Badge(text: "System route", symbol: "speaker.wave.2.fill")
+                    Badge(text: "Mic off", symbol: "mic.slash.fill")
+                }
             }
+            Spacer(minLength: 0)
         }
     }
 
@@ -151,6 +156,39 @@ struct ContentView: View {
             startPoint: .leading,
             endPoint: .trailing
         )
+    }
+}
+
+private struct AppLogo: View {
+    var body: some View {
+        Group {
+            if let image = NSImage(named: "AppIcon") ?? bundleLogo {
+                Image(nsImage: image)
+                    .resizable()
+                    .interpolation(.high)
+                    .aspectRatio(contentMode: .fit)
+            } else {
+                Image(systemName: "opticaldisc.fill")
+                    .font(.system(size: 28, weight: .medium))
+                    .foregroundStyle(Palette.amber)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .background(Palette.well)
+            }
+        }
+        .frame(width: 64, height: 64)
+        .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+        .shadow(color: .black.opacity(0.4), radius: 10, y: 5)
+    }
+
+    private var bundleLogo: NSImage? {
+        let names = ["AppIcon", "soundtrack-icon"]
+        for name in names {
+            if let url = Bundle.main.url(forResource: name, withExtension: "png"),
+               let image = NSImage(contentsOf: url) {
+                return image
+            }
+        }
+        return nil
     }
 }
 

@@ -11,10 +11,12 @@ swift build -c release --product Soundtrack
 BIN="$(swift build -c release --show-bin-path)/Soundtrack"
 
 rm -rf "$APP"
-mkdir -p "$APP/Contents/MacOS"
+mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources"
 cp "$BIN" "$APP/Contents/MacOS/Soundtrack"
 cp "$ROOT/App/Info.plist" "$APP/Contents/Info.plist"
+cp "$ROOT/App/AppIcon.icns" "$APP/Contents/Resources/AppIcon.icns"
+cp "$ROOT/App/soundtrack-icon.png" "$APP/Contents/Resources/AppIcon.png"
 echo -n 'APPL????' > "$APP/Contents/PkgInfo"
 
-codesign --force --sign "$IDENTITY" --identifier com.eddy.soundtrack --timestamp=none "$APP"
+codesign --force --deep --sign "$IDENTITY" --identifier com.eddy.soundtrack --timestamp=none "$APP"
 echo "Built $APP"
