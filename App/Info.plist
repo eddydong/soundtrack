@@ -26,6 +26,8 @@
 	<string>14.0</string>
 	<key>NSAudioCaptureUsageDescription</key>
 	<string>Soundtrack records the audio your Mac is playing so you can save it as an MP3. It does not use the microphone.</string>
+	<key>NSScreenCaptureUsageDescription</key>
+	<string>Soundtrack needs Screen and System Audio Recording to capture what your Mac is playing. It does not capture your microphone or a video of your screen.</string>
 	<key>NSHighResolutionCapable</key>
 	<true/>
 </dict>

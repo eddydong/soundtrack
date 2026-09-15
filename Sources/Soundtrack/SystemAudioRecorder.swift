@@ -221,7 +221,7 @@ final class SystemAudioRecorder: ObservableObject {
             try? FileManager.default.removeItem(at: wav)
             lastFile = mp3
             phase = .idle
-            status = "Saved \(mp3.lastPathComponent)"
+            status = "Saved \(mp3.lastPathComponent) to your Desktop."
         } catch {
             fail(Self.describe(error))
         }
@@ -276,16 +276,16 @@ final class SystemAudioRecorder: ObservableObject {
     }
 
     private static func encodeMP3(from wav: URL, to mp3: URL) throws {
-        guard let ffmpeg = findFFmpeg() else {
-            throw RecorderError.ffmpegMissing
+        guard let lame = findLame() else {
+            throw RecorderError.encoderMissing
         }
         let process = Process()
-        process.executableURL = ffmpeg
+        process.executableURL = lame
         process.arguments = [
-            "-y", "-hide_banner", "-nostdin",
-            "-i", wav.path,
-            "-codec:a", "libmp3lame",
-            "-b:a", "320k",
+            "--silent",
+            "-b", "320",
+            "--noreplaygain",
+            wav.path,
             mp3.path
         ]
         let stderr = Pipe()
@@ -296,35 +296,35 @@ final class SystemAudioRecorder: ObservableObject {
         if process.terminationStatus != 0 {
             let data = stderr.fileHandleForReading.readDataToEndOfFile()
             let text = String(data: data, encoding: .utf8)?
-                .trimmingCharacters(in: .whitespacesAndNewlines) ?? "ffmpeg failed"
-            throw RecorderError.ffmpegFailed(text)
+                .trimmingCharacters(in: .whitespacesAndNewlines) ?? "MP3 encoding failed"
+            throw RecorderError.encoderFailed(text)
         }
     }
 
-    private static func findFFmpeg() -> URL? {
+    private static func findLame() -> URL? {
+        let bundled = Bundle.main.bundleURL
+            .appendingPathComponent("Contents/Helpers/lame", isDirectory: false)
         let candidates = [
-            "/opt/homebrew/bin/ffmpeg",
-            "/usr/local/bin/ffmpeg"
+            bundled,
+            URL(fileURLWithPath: "/opt/homebrew/bin/lame"),
+            URL(fileURLWithPath: "/usr/local/bin/lame")
         ]
-        for path in candidates where FileManager.default.isExecutableFile(atPath: path) {
-            return URL(fileURLWithPath: path)
-        }
-        return nil
+        return candidates.first { FileManager.default.isExecutableFile(atPath: $0.path) }
     }
 }
 
 enum RecorderError: LocalizedError {
-    case ffmpegMissing
-    case ffmpegFailed(String)
+    case encoderMissing
+    case encoderFailed(String)
     case noDisplay
     case noBrowser
     case writeFailed(String)
 
     var errorDescription: String? {
         switch self {
-        case .ffmpegMissing:
-            return "ffmpeg is not installed. Install it with Homebrew: brew install ffmpeg"
-        case .ffmpegFailed(let text):
+        case .encoderMissing:
+            return "The bundled MP3 encoder is missing. Re-download Soundtrack and keep the app together as one file."
+        case .encoderFailed(let text):
             return "Could not encode MP3. \(text)"
         case .noDisplay:
             return "No display was available to attach the system-audio tap."
